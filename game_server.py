@@ -1,3 +1,6 @@
+import socket
+import selectors
+import types
 import random
 
 class GameNumber:
@@ -29,3 +32,13 @@ class GameNumber:
             self.state = "TooLow"
             self.MAX_ATTEMPTS -= 1
             return "It's more than that."
+
+sel = selectors.DefaultSelector()
+
+host, port = '127.0.0.1', 9999
+lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+lsock.bind((host, port))
+lsock.listen()
+print(f"Listening on {(host, port)}")
+lsock.setblocking(False)
+sel.register(lsock, selectors.EVENT_READ, data=None)
