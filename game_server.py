@@ -2,6 +2,7 @@ import socket
 import selectors
 import types
 import random
+from colored import fg 
 
 class GameNumber:
     MAX_ATTEMPTS = 10
@@ -20,7 +21,6 @@ class GameNumber:
             return 'You exceeded the maximum number of attempts. Game over.'
         
         elif user_input == self.answer:
-            self.state = "CorrectAnswer"
             return "Correct! \nGame End , See you next time."
 
         elif user_input > self.answer:
@@ -44,8 +44,9 @@ lsock.setblocking(False)
 sel.register(lsock, selectors.EVENT_READ, data=None)
 
 def accept_wrapper(sock):
-    conn, addr = sock.accept()  
-    print(f"Accepted connection from {addr}")
+    conn, addr = sock.accept()
+    print(f"{fg(10)}{'-'*40} \nAccepted connection from {addr} \n{'-'*40}")
+    print(' ')
     conn.setblocking(False)
     data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"", game=None)
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -68,7 +69,8 @@ def service_connection(key, mask):
             result = data.game.play(user_input)
             data.outb += result.encode('utf-8') + b'\n'
         else:
-            print(f"Closing connection to {data.addr}")
+            print(f"{fg(1)}{'-'*40} \nClosing connection to {data.addr} \n{'-'*40}")
+            print(' ')
             sel.unregister(sock)
             sock.close()
             
