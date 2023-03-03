@@ -83,3 +83,16 @@ def service_connection(key, mask):
                 print(f"Closing connection to {data.addr}")
                 sel.unregister(sock)
                 sock.close()
+
+try:
+    while True:
+        events = sel.select(timeout=None)
+        for key, mask in events:
+            if key.data is None:
+                accept_wrapper(key.fileobj)
+            else:
+                service_connection(key, mask)
+except KeyboardInterrupt:
+    print("Caught keyboard interrupt, exiting")
+finally:
+    sel.close()
