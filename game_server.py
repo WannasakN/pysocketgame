@@ -50,3 +50,36 @@ def accept_wrapper(sock):
     data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"", game=None)
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     sel.register(conn, events, data=data)
+
+def service_connection(key, mask):
+    sock = key.fileobj
+    data = key.data
+    
+    if mask & selectors.EVENT_READ:
+        recv_data = sock.recv(1024)  
+        if recv_data:
+            if not hasattr(data, 'game') or data.game is None:
+                data.game = GameNumber()
+            try:
+                user_input = int(recv_data.strip())
+            except ValueError:
+                return
+
+            result = data.game.play(user_input)
+            data.outb += result.encode('utf-8') + b'\n'
+        else:
+            print(f"Closing connection to {data.addr}")
+            sel.unregister(sock)
+            sock.close()
+            
+    if mask & selectors.EVENT_WRITE:
+        if data.outb:
+            if not data.outb.decode('utf-8').endswith('Game End , See you next time.\n') or not data.outb.decode('utf-8').endswith('Game over.\n'):
+                sent = sock.send(data.outb)
+                data.outb = data.outb[sent:]
+            else:
+                sent = sock.send(data.outb)
+                data.outb = data.outb[sent:]
+                print(f"Closing connection to {data.addr}")
+                sel.unregister(sock)
+                sock.close()
